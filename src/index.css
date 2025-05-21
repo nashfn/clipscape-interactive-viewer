@@ -93,4 +93,40 @@
     letter-spacing: 0.3em;
     font-weight: 700;
   }
+
+  /* Mic button animations */
+  @keyframes pulse-ring {
+    0% {
+      transform: scale(0.85);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(0.85);
+      opacity: 0.8;
+    }
+  }
+  
+  @keyframes ripple {
+    0% {
+      box-shadow: 0 0 0 0 rgba(155, 135, 245, 0.4),
+                 0 0 0 1px rgba(155, 135, 245, 0.2);
+    }
+    100% {
+      box-shadow: 0 0 0 18px rgba(155, 135, 245, 0),
+                 0 0 0 6px rgba(155, 135, 245, 0);
+    }
+  }
+  
+  .mic-animation {
+    animation: pulse-ring 2s infinite;
+  }
+  
+  button:hover .mic-animation {
+    animation: ripple 2s infinite;
+  }
 }
+

@@ -5,6 +5,7 @@ import ClipSelector from "@/components/ClipSelector";
 import { videoSource, videoClips } from "@/data/videoClips";
 import { VideoClip } from "@/types/video";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import VoiceChat from "@/components/VoiceChat";
 
 const Index = () => {
   const [activeClipId, setActiveClipId] = useState<string>(videoClips[0].id);
@@ -58,6 +59,9 @@ const Index = () => {
             <p>{activeClip.description}</p>
           </CardContent>
         </Card>
+        
+        {/* Voice Chat Component */}
+        <VoiceChat />
       </div>
     </div>
   );
