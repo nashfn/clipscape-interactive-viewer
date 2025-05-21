@@ -86,4 +86,11 @@
   .video-button {
     @apply p-2 rounded-full text-white hover:bg-video-hover transition-colors;
   }
+  
+  /* Mission Impossible style title effect */
+  h1.text-transparent.bg-gradient-to-r {
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.3), 0 0 20px rgba(255, 0, 0, 0.2);
+    letter-spacing: 0.3em;
+    font-weight: 700;
+  }
 }

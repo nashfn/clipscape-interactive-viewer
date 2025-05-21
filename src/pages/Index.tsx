@@ -19,8 +19,8 @@ const Index = () => {
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="container mx-auto space-y-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-video-accent to-purple-500">
-            The Entity
+          <h1 className="text-4xl md:text-5xl font-bold tracking-[0.3em] uppercase bg-clip-text text-transparent bg-gradient-to-r from-red-500 via-video-accent to-red-500">
+            T H E &nbsp; E N T I T Y
           </h1>
           <p className="text-muted-foreground mt-2">
             Select different clips to navigate through the video
