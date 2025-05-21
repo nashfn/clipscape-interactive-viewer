@@ -1,51 +1,51 @@
 
 import { VideoClip, VideoSource } from "../types/video";
 
-// Using a royalty-free video from Pixabay for demonstration
+// Using embedded YouTube iframe for Mission Impossible trailer clips
 export const videoSource: VideoSource = {
-  url: "https://cdn.pixabay.com/vimeo/328224049/ocean-49267.mp4?width=1280&hash=f2c0e975b3af8c58e7aa634cc0c739455892d3e8",
-  type: "video/mp4"
+  url: "https://www.youtube.com/embed/wb49-oV0F78", // Mission Impossible: Dead Reckoning Part One - Official Trailer
+  type: "video/youtube"
 };
 
 export const videoClips: VideoClip[] = [
   {
     id: "clip1",
-    title: "Waves Crashing",
-    description: "Beautiful ocean waves breaking on the shore",
+    title: "Dead Reckoning Intro",
+    description: "Opening moments from the Dead Reckoning trailer",
     startTime: 0,
-    endTime: 5,
-    thumbnail: "https://cdn.pixabay.com/photo/2016/11/29/04/19/ocean-1867285_640.jpg"
+    endTime: 30,
+    thumbnail: "https://i.ytimg.com/vi/wb49-oV0F78/hqdefault.jpg"
   },
   {
     id: "clip2",
-    title: "Calm Waters",
-    description: "Peaceful view of the ocean surface",
-    startTime: 5,
-    endTime: 10,
-    thumbnail: "https://cdn.pixabay.com/photo/2017/03/27/14/49/beach-2179183_640.jpg"
+    title: "Dangerous Mission",
+    description: "Ethan Hunt faces a new dangerous mission",
+    startTime: 30,
+    endTime: 60,
+    thumbnail: "https://i.ytimg.com/vi/wb49-oV0F78/hq2.jpg"
   },
   {
     id: "clip3",
-    title: "Ocean Horizon",
-    description: "Wide angle shot of the ocean meeting the sky",
-    startTime: 10,
-    endTime: 15,
-    thumbnail: "https://cdn.pixabay.com/photo/2016/11/19/12/58/seagulls-1839598_640.jpg"
+    title: "The Chase",
+    description: "Intense chase sequence from the trailer",
+    startTime: 60,
+    endTime: 90,
+    thumbnail: "https://i.ytimg.com/vi/wb49-oV0F78/hq3.jpg"
   },
   {
     id: "clip4",
-    title: "Distant View",
-    description: "Far view of the ocean from the shore",
-    startTime: 15,
-    endTime: 20,
-    thumbnail: "https://cdn.pixabay.com/photo/2016/03/04/19/36/beach-1236581_640.jpg"
+    title: "Hunt vs Villain",
+    description: "Confrontation with the film's antagonist",
+    startTime: 90,
+    endTime: 120,
+    thumbnail: "https://i.ytimg.com/vi/wb49-oV0F78/hqdefault.jpg"
   },
   {
     id: "clip5",
-    title: "Concluding Waves",
-    description: "Final view of the ocean waves",
-    startTime: 20,
-    endTime: 25,
-    thumbnail: "https://cdn.pixabay.com/photo/2014/08/15/11/29/beach-418742_640.jpg"
+    title: "Final Moments",
+    description: "The climactic moments of the trailer",
+    startTime: 120,
+    endTime: 150,
+    thumbnail: "https://i.ytimg.com/vi/wb49-oV0F78/hq1.jpg"
   }
 ];

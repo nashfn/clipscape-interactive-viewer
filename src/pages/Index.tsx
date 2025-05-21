@@ -20,7 +20,7 @@ const Index = () => {
       <div className="container mx-auto space-y-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-video-accent to-purple-500">
-            Interactive Video Player
+            The Entity
           </h1>
           <p className="text-muted-foreground mt-2">
             Select different clips to navigate through the video

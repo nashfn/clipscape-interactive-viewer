@@ -9,13 +9,32 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   initialClip
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [activeClip, setActiveClip] = useState<VideoClip | null>(initialClip || null);
+  const isYouTube = source.type === "video/youtube";
 
   // Set up event listeners when the component mounts
   useEffect(() => {
+    if (isYouTube) {
+      // For YouTube videos, we'll rely on the YouTube iframe API
+      // This is a simplified version, as we can't fully control YouTube's iframe
+      setDuration(180); // Assuming a 3-minute trailer
+      
+      if (activeClip) {
+        // Update YouTube video start time
+        const currentUrl = new URL(source.url);
+        currentUrl.searchParams.set("start", activeClip.startTime.toString());
+        
+        if (iframeRef.current) {
+          iframeRef.current.src = currentUrl.toString();
+        }
+      }
+      return;
+    }
+
     const video = videoRef.current;
     if (!video) return;
 
@@ -58,17 +77,30 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       video.removeEventListener('play', handlePlay);
       video.removeEventListener('pause', handlePause);
     };
-  }, [activeClip, clips]);
+  }, [activeClip, clips, isYouTube, source.url]);
 
   // Effect to handle initial clip if provided
   useEffect(() => {
-    if (initialClip && videoRef.current) {
+    if (initialClip) {
       setActiveClip(initialClip);
-      videoRef.current.currentTime = initialClip.startTime;
+      
+      if (isYouTube && iframeRef.current) {
+        const currentUrl = new URL(source.url);
+        currentUrl.searchParams.set("start", initialClip.startTime.toString());
+        iframeRef.current.src = currentUrl.toString();
+      } else if (videoRef.current) {
+        videoRef.current.currentTime = initialClip.startTime;
+      }
     }
-  }, [initialClip]);
+  }, [initialClip, isYouTube, source.url]);
 
   const togglePlayPause = () => {
+    if (isYouTube) {
+      // For YouTube, we can't directly control playback
+      console.log("YouTube playback control not implemented");
+      return;
+    }
+    
     const video = videoRef.current;
     if (!video) return;
 
@@ -80,6 +112,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const handleSeek = (time: number) => {
+    if (isYouTube) {
+      // For YouTube, we'd need to reload the iframe with a different start time
+      console.log("YouTube seek functionality not fully implemented");
+      return;
+    }
+    
     const video = videoRef.current;
     if (!video) return;
 
@@ -95,34 +133,54 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   const playClip = (clip: VideoClip) => {
     setActiveClip(clip);
-    const video = videoRef.current;
-    if (!video) return;
-
-    // Set the current time to the start of the clip
-    video.currentTime = clip.startTime;
-    // Start playing
-    video.play()
-      .catch(error => {
-        console.error("Error playing video:", error);
-      });
+    
+    if (isYouTube && iframeRef.current) {
+      const currentUrl = new URL(source.url);
+      currentUrl.searchParams.set("start", clip.startTime.toString());
+      iframeRef.current.src = currentUrl.toString();
+      setIsPlaying(true);
+    } else if (videoRef.current) {
+      // Set the current time to the start of the clip
+      videoRef.current.currentTime = clip.startTime;
+      // Start playing
+      videoRef.current.play()
+        .catch(error => {
+          console.error("Error playing video:", error);
+        });
+    }
   };
 
   return (
     <div className="video-container w-full h-full">
-      <video
-        ref={videoRef}
-        className="video-player"
-        src={source.url}
-        onClick={togglePlayPause}
-      />
-      <VideoControls
-        videoRef={videoRef}
-        currentTime={currentTime}
-        duration={duration}
-        isPlaying={isPlaying}
-        onPlayPause={togglePlayPause}
-        onSeek={handleSeek}
-      />
+      {isYouTube ? (
+        <iframe
+          ref={iframeRef}
+          className="w-full aspect-video"
+          src={`${source.url}?autoplay=1&start=${activeClip?.startTime || 0}`}
+          title="YouTube video player"
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        ></iframe>
+      ) : (
+        <video
+          ref={videoRef}
+          className="video-player"
+          src={source.url}
+          onClick={togglePlayPause}
+        />
+      )}
+      
+      {!isYouTube && (
+        <VideoControls
+          videoRef={videoRef}
+          currentTime={currentTime}
+          duration={duration}
+          isPlaying={isPlaying}
+          onPlayPause={togglePlayPause}
+          onSeek={handleSeek}
+        />
+      )}
     </div>
   );
 };

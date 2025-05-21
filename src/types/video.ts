@@ -10,7 +10,7 @@ export interface VideoClip {
 
 export interface VideoSource {
   url: string;
-  type: string;
+  type: string; // "video/mp4" or "video/youtube"
 }
 
 export interface VideoPlayerProps {
