@@ -165,9 +165,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       ) : (
         <video
           ref={videoRef}
-          className="video-player"
+          className="w-full aspect-video"
           src={source.url}
           onClick={togglePlayPause}
+          controls={false}
         />
       )}
       

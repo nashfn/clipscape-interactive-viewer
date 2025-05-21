@@ -7,6 +7,12 @@ export const videoSource: VideoSource = {
   type: "video/youtube"
 };
 
+// Example MP4 video source for future use (when switching from YouTube)
+// export const videoSource: VideoSource = {
+//   url: "/videos/mission-impossible-trailer.mp4", // Path to your local MP4 file
+//   type: "video/mp4"
+// };
+
 export const videoClips: VideoClip[] = [
   {
     id: "clip1",
