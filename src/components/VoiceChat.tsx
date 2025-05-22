@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import AudioInput from "./AudioInput";
-import { transcribeAudio, chatWithGPT, synthesizeSpeech } from "@/services/openAIService";
+import { processAudioRealtime, chatWithGPT, synthesizeSpeech } from "@/services/openAIService";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -42,8 +42,8 @@ const VoiceChat: React.FC = () => {
     setIsProcessing(true);
     
     try {
-      // Step 1: Transcribe the audio
-      const text = await transcribeAudio(audioBlob, apiKey);
+      // Step 1: Process the audio using the real-time API
+      const text = await processAudioRealtime(audioBlob, apiKey);
       setTranscription(text);
       
       if (!text) {

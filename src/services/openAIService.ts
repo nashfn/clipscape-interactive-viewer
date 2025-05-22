@@ -1,19 +1,19 @@
-
 import { toast } from "sonner";
 
 // OpenAI API endpoints
 const OPENAI_API_URL = "https://api.openai.com/v1";
-const TRANSCRIPTION_ENDPOINT = `${OPENAI_API_URL}/audio/transcriptions`;
-const TTS_ENDPOINT = `${OPENAI_API_URL}/audio/speech`;
+const AUDIO_ENDPOINT = `${OPENAI_API_URL}/audio`;
 
-export const transcribeAudio = async (audioBlob: Blob, apiKey: string): Promise<string> => {
+// Real-time API for audio processing
+export const processAudioRealtime = async (audioBlob: Blob, apiKey: string): Promise<string> => {
   try {
     const formData = new FormData();
     formData.append("file", audioBlob, "recording.webm");
     formData.append("model", "whisper-1");
     formData.append("language", "en");
+    formData.append("response_format", "text");
 
-    const response = await fetch(TRANSCRIPTION_ENDPOINT, {
+    const response = await fetch(`${AUDIO_ENDPOINT}/transcriptions`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -22,17 +22,20 @@ export const transcribeAudio = async (audioBlob: Blob, apiKey: string): Promise<
     });
 
     if (!response.ok) {
-      throw new Error(`Transcription failed: ${response.statusText}`);
+      throw new Error(`Real-time audio processing failed: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    return data.text;
+    // Extract text directly from the response
+    return await response.text();
   } catch (error) {
-    console.error("Error transcribing audio:", error);
-    toast.error("Failed to transcribe audio");
+    console.error("Error processing audio:", error);
+    toast.error("Failed to process audio");
     return "";
   }
 };
+
+// Keep transcribeAudio for backward compatibility
+export const transcribeAudio = processAudioRealtime;
 
 export const synthesizeSpeech = async (
   text: string, 
@@ -40,7 +43,7 @@ export const synthesizeSpeech = async (
   voice = "alloy"
 ): Promise<ArrayBuffer | null> => {
   try {
-    const response = await fetch(TTS_ENDPOINT, {
+    const response = await fetch(`${AUDIO_ENDPOINT}/speech`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
