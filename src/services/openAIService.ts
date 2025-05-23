@@ -34,6 +34,74 @@ export const processAudioRealtime = async (audioBlob: Blob, apiKey: string): Pro
   }
 };
 
+// Stream audio to OpenAI in real-time
+export const streamAudioToOpenAI = () => {
+  let mediaRecorder: MediaRecorder | null = null;
+  let audioChunks: Blob[] = [];
+  let isRecording = false;
+
+  const startStreaming = async (apiKey: string, onTranscriptionReceived: (text: string) => void) => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      isRecording = true;
+
+      // Collect audio in chunks and send at short intervals
+      mediaRecorder.ondataavailable = async (event) => {
+        if (event.data.size > 0) {
+          audioChunks.push(event.data);
+          
+          // Send the audio chunks every second
+          if (audioChunks.length > 0 && isRecording) {
+            const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+            const text = await processAudioRealtime(audioBlob, apiKey);
+            if (text.trim()) {
+              onTranscriptionReceived(text);
+            }
+            // Clear the chunks after sending
+            audioChunks = [];
+          }
+        }
+      };
+
+      // Set a shorter timeslice to get audio chunks more frequently
+      mediaRecorder.start(1000); // Get data every 1 second
+      toast.success("Started listening...");
+      
+      return stream;
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      toast.error("Could not access microphone");
+      return null;
+    }
+  };
+
+  const stopStreaming = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      isRecording = false;
+      
+      // Stop all audio tracks
+      if (mediaRecorder.stream) {
+        mediaRecorder.stream.getTracks().forEach((track) => {
+          track.stop();
+        });
+      }
+      
+      // Process any remaining audio chunks
+      return new Blob(audioChunks, { type: "audio/webm" });
+    }
+    return null;
+  };
+
+  return {
+    startStreaming,
+    stopStreaming,
+    isStreaming: () => isRecording
+  };
+};
+
 // Keep transcribeAudio for backward compatibility
 export const transcribeAudio = processAudioRealtime;
 

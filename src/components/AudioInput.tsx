@@ -4,58 +4,66 @@ import { Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
+import { streamAudioToOpenAI } from "@/services/openAIService";
 
 interface AudioInputProps {
   onTranscriptionComplete: (audioBlob: Blob) => void;
+  onTranscriptionReceived?: (text: string) => void;
   isProcessing: boolean;
+  apiKey: string;
 }
 
-const AudioInput: React.FC<AudioInputProps> = ({ onTranscriptionComplete, isProcessing }) => {
+const AudioInput: React.FC<AudioInputProps> = ({ 
+  onTranscriptionComplete, 
+  onTranscriptionReceived,
+  isProcessing, 
+  apiKey 
+}) => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const audioStreamingRef = useRef(streamAudioToOpenAI());
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
+      if (!apiKey) {
+        toast.error("API key is required");
+        return;
+      }
+      
+      // Start streaming audio to OpenAI
+      const stream = await audioStreamingRef.current.startStreaming(
+        apiKey, 
+        (text) => {
+          // This callback is called when we get transcription from streaming
+          if (onTranscriptionReceived) {
+            onTranscriptionReceived(text);
+          }
         }
-      };
-
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        setAudioBlob(audioBlob);
-        onTranscriptionComplete(audioBlob);
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-      toast.success("Recording started");
+      );
+      
+      if (stream) {
+        streamRef.current = stream;
+        setIsRecording(true);
+      }
     } catch (error) {
-      console.error("Error accessing microphone:", error);
-      toast.error("Could not access microphone");
+      console.error("Error starting audio streaming:", error);
+      toast.error("Could not start audio streaming");
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
+    if (isRecording) {
+      // Stop streaming and get any final audio blob
+      const finalBlob = audioStreamingRef.current.stopStreaming();
       
-      // Stop all audio tracks
-      if (mediaRecorderRef.current.stream) {
-        mediaRecorderRef.current.stream.getTracks().forEach((track) => {
-          track.stop();
-        });
+      if (finalBlob) {
+        setAudioBlob(finalBlob);
+        // Send the final blob for processing
+        onTranscriptionComplete(finalBlob);
       }
       
+      setIsRecording(false);
       toast.info("Processing your audio...");
     }
   };
