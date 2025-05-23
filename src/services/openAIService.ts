@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 
 // OpenAI API endpoints
@@ -8,7 +9,7 @@ const AUDIO_ENDPOINT = `${OPENAI_API_URL}/audio`;
 export const processAudioRealtime = async (audioBlob: Blob, apiKey: string): Promise<string> => {
   try {
     const formData = new FormData();
-    formData.append("file", audioBlob, "recording.webm");
+    formData.append("file", audioBlob, "recording.wav");
     formData.append("model", "whisper-1");
     formData.append("language", "en");
     formData.append("response_format", "text");
@@ -43,7 +44,19 @@ export const streamAudioToOpenAI = () => {
   const startStreaming = async (apiKey: string, onTranscriptionReceived: (text: string) => void) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream);
+      
+      // Use a supported audio format by OpenAI (wav)
+      mediaRecorder = new MediaRecorder(stream, { 
+        mimeType: 'audio/wav' 
+      });
+      
+      // If the browser doesn't support wav, try webm
+      if (!MediaRecorder.isTypeSupported('audio/wav')) {
+        mediaRecorder = new MediaRecorder(stream, { 
+          mimeType: 'audio/webm' 
+        });
+      }
+      
       audioChunks = [];
       isRecording = true;
 
@@ -54,13 +67,58 @@ export const streamAudioToOpenAI = () => {
           
           // Send the audio chunks every second
           if (audioChunks.length > 0 && isRecording) {
-            const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-            const text = await processAudioRealtime(audioBlob, apiKey);
-            if (text.trim()) {
-              onTranscriptionReceived(text);
+            try {
+              // Convert to a supported format before sending
+              const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+              
+              // Create an audio element to convert the format if needed
+              const audioElement = new Audio();
+              audioElement.src = URL.createObjectURL(audioBlob);
+              
+              // Wait for the audio to load
+              await new Promise(resolve => {
+                audioElement.oncanplaythrough = resolve;
+                audioElement.load();
+              });
+              
+              // Get audio data in a format OpenAI accepts
+              const audioContext = new AudioContext();
+              const audioSource = audioContext.createMediaElementSource(audioElement);
+              const destination = audioContext.createMediaStreamDestination();
+              audioSource.connect(destination);
+              
+              const mediaRecorderWav = new MediaRecorder(destination.stream, {
+                mimeType: 'audio/wav'
+              });
+              
+              const wavChunks: Blob[] = [];
+              
+              mediaRecorderWav.ondataavailable = e => {
+                if (e.data.size > 0) wavChunks.push(e.data);
+              };
+              
+              mediaRecorderWav.onstop = async () => {
+                const wavBlob = new Blob(wavChunks, { type: "audio/wav" });
+                const text = await processAudioRealtime(wavBlob, apiKey);
+                if (text.trim()) {
+                  onTranscriptionReceived(text);
+                }
+              };
+              
+              // Start recording the properly formatted audio
+              mediaRecorderWav.start();
+              audioElement.play();
+              
+              // Stop after a short duration
+              setTimeout(() => {
+                mediaRecorderWav.stop();
+              }, 500);
+              
+              // Clear the chunks after processing
+              audioChunks = [];
+            } catch (error) {
+              console.error("Error processing audio chunk:", error);
             }
-            // Clear the chunks after sending
-            audioChunks = [];
           }
         }
       };
@@ -90,7 +148,7 @@ export const streamAudioToOpenAI = () => {
       }
       
       // Process any remaining audio chunks
-      return new Blob(audioChunks, { type: "audio/webm" });
+      return new Blob(audioChunks, { type: "audio/wav" });
     }
     return null;
   };
