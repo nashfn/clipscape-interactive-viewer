@@ -48,7 +48,7 @@ const AudioInput: React.FC<AudioInputProps> = ({
       }
     } catch (error) {
       console.error("Error starting audio streaming:", error);
-      toast.error("Could not start audio streaming");
+      toast.error("Could not start audio recording");
     }
   };
 

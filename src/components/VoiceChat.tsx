@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import AudioInput from "./AudioInput";
 import { chatWithGPT, synthesizeSpeech } from "@/services/openAIService";
@@ -38,7 +37,10 @@ const VoiceChat: React.FC = () => {
 
   const handleTranscriptionUpdate = async (text: string) => {
     // Update the transcription in real-time
-    setTranscription(text);
+    setTranscription(prev => {
+      const newText = prev ? `${prev} ${text}` : text;
+      return newText;
+    });
   };
 
   const handleTranscriptionComplete = async (audioBlob: Blob) => {
@@ -48,8 +50,6 @@ const VoiceChat: React.FC = () => {
     
     try {
       // The transcription has already been happening in real-time
-      // Now we just need to get the GPT response
-      
       if (!transcription) {
         setIsProcessing(false);
         return;
@@ -77,6 +77,8 @@ const VoiceChat: React.FC = () => {
       toast.error("An error occurred during processing");
     } finally {
       setIsProcessing(false);
+      // Reset transcription for the next interaction
+      setTranscription("");
     }
   };
 
