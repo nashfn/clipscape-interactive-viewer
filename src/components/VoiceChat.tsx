@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import AudioInput from "./AudioInput";
-import { chatWithGPT, synthesizeSpeech } from "@/services/openAIService";
+import { transcribeAudio, chatWithGPT, synthesizeSpeech } from "@/services/openAIService";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -36,30 +36,26 @@ const VoiceChat: React.FC = () => {
     }
   };
 
-  const handleTranscriptionUpdate = async (text: string) => {
-    // Update the transcription in real-time
-    setTranscription(text);
-  };
-
   const handleTranscriptionComplete = async (audioBlob: Blob) => {
     if (!audioBlob || !isApiKeySet) return;
     
     setIsProcessing(true);
     
     try {
-      // The transcription has already been happening in real-time
-      // Now we just need to get the GPT response
+      // Step 1: Transcribe the audio
+      const text = await transcribeAudio(audioBlob, apiKey);
+      setTranscription(text);
       
-      if (!transcription) {
+      if (!text) {
         setIsProcessing(false);
         return;
       }
       
-      // Get response from GPT-4o
-      const aiResponse = await chatWithGPT(transcription, apiKey);
+      // Step 2: Get response from GPT-4o
+      const aiResponse = await chatWithGPT(text, apiKey);
       setResponse(aiResponse);
       
-      // Synthesize speech from response
+      // Step 3: Synthesize speech from response
       const speechAudio = await synthesizeSpeech(aiResponse, apiKey);
       
       if (speechAudio) {
@@ -108,22 +104,14 @@ const VoiceChat: React.FC = () => {
         </Card>
       ) : (
         <>
-          {(transcription || response) && (
+          {response && (
             <Card className="fixed bottom-6 left-6 z-50 w-72 max-w-md animate-fade-in">
               <CardContent className="p-4">
                 <div className="space-y-2">
-                  {transcription && (
-                    <>
-                      <p className="text-sm font-medium">You said:</p>
-                      <p className="text-sm italic">{transcription}</p>
-                    </>
-                  )}
-                  {response && (
-                    <>
-                      <p className="text-sm font-medium mt-2">Response:</p>
-                      <p className="text-sm">{response}</p>
-                    </>
-                  )}
+                  <p className="text-sm font-medium">You said:</p>
+                  <p className="text-sm italic">{transcription}</p>
+                  <p className="text-sm font-medium mt-2">Response:</p>
+                  <p className="text-sm">{response}</p>
                 </div>
               </CardContent>
             </Card>
@@ -131,9 +119,7 @@ const VoiceChat: React.FC = () => {
           
           <AudioInput 
             onTranscriptionComplete={handleTranscriptionComplete}
-            onTranscriptionReceived={handleTranscriptionUpdate}
-            isProcessing={isProcessing}
-            apiKey={apiKey}
+            isProcessing={isProcessing} 
           />
           
           {!isApiKeySet && (
