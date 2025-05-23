@@ -43,30 +43,7 @@ export const streamAudioToOpenAI = () => {
   const startStreaming = async (apiKey: string, onTranscriptionReceived: (text: string) => void) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
-      // Check which MIME types are supported by this browser
-      const mimeTypes = [
-        'audio/webm',
-        'audio/mp4',
-        'audio/ogg',
-        'audio/wav'
-      ];
-      
-      let supportedType = '';
-      
-      for (const type of mimeTypes) {
-        if (MediaRecorder.isTypeSupported(type)) {
-          supportedType = type;
-          break;
-        }
-      }
-      
-      if (!supportedType) {
-        throw new Error('No supported media recording MIME type found');
-      }
-      
-      // Create the MediaRecorder with the supported type
-      mediaRecorder = new MediaRecorder(stream, { mimeType: supportedType });
+      mediaRecorder = new MediaRecorder(stream);
       audioChunks = [];
       isRecording = true;
 
@@ -77,18 +54,13 @@ export const streamAudioToOpenAI = () => {
           
           // Send the audio chunks every second
           if (audioChunks.length > 0 && isRecording) {
-            try {
-              const audioBlob = new Blob(audioChunks, { type: supportedType });
-              const text = await processAudioRealtime(audioBlob, apiKey);
-              if (text.trim()) {
-                onTranscriptionReceived(text);
-              }
-              
-              // Clear the chunks after processing
-              audioChunks = [];
-            } catch (error) {
-              console.error("Error processing audio chunk:", error);
+            const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+            const text = await processAudioRealtime(audioBlob, apiKey);
+            if (text.trim()) {
+              onTranscriptionReceived(text);
             }
+            // Clear the chunks after sending
+            audioChunks = [];
           }
         }
       };
@@ -117,10 +89,8 @@ export const streamAudioToOpenAI = () => {
         });
       }
       
-      // Process any remaining audio chunks if we have any
-      if (audioChunks.length > 0) {
-        return new Blob(audioChunks);
-      }
+      // Process any remaining audio chunks
+      return new Blob(audioChunks, { type: "audio/webm" });
     }
     return null;
   };
